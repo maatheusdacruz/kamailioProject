@@ -1,0 +1,114 @@
+version: '3.8'
+
+# Network architecture:
+#   HAProxy  (host network) → port 5060 external SIP entry
+#   Kamailio (host network) → port 5061, behind HAProxy
+#   FreeSWITCH (host network) → port 5080, receives from Kamailio
+#   AMD service  (bridge)  → exposed on 127.0.0.1:8080
+#   PostgreSQL   (bridge)  → exposed on 127.0.0.1:5432
+#   Redis        (bridge)  → exposed on 127.0.0.1:6379
+#
+# Host-network services reach bridge services via 127.0.0.1 (published ports).
+
+services:
+
+  # ── Load Balancer ─────────────────────────────────────────────────────────
+  haproxy:
+    image: haproxy:2.8-alpine
+    network_mode: host
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    restart: unless-stopped
+    depends_on:
+      - kamailio
+
+  # ── SIP Control Layer ──────────────────────────────────────────────────────
+  kamailio:
+    build:
+      context: ./kamailio
+    network_mode: host
+    volumes:
+      - ./kamailio/config:/etc/kamailio:ro
+    environment:
+      - DB_URL=postgres://${DB_USER:-kamailio}:${DB_PASS:-kamailio}@127.0.0.1:5432/${DB_NAME:-kamailio}
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Media Layer ────────────────────────────────────────────────────────────
+  freeswitch:
+    build:
+      context: ./freeswitch
+    network_mode: host
+    volumes:
+      - ./freeswitch/config:/etc/freeswitch:ro
+      - freeswitch_recordings:/var/lib/freeswitch/recordings
+      - freeswitch_logs:/var/log/freeswitch
+    environment:
+      - AMD_SERVICE_URL=${AMD_SERVICE_URL:-http://127.0.0.1:8080}
+    depends_on:
+      amd_service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── AMD Intelligence Layer ─────────────────────────────────────────────────
+  amd_service:
+    build:
+      context: ./amd_service
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - WORKERS=${AMD_WORKERS:-4}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Data Layer ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-kamailio}
+      - POSTGRES_PASSWORD=${DB_PASS:-kamailio}
+      - POSTGRES_DB=${DB_NAME:-kamailio}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kamailio} -d ${DB_NAME:-kamailio}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  freeswitch_recordings:
+  freeswitch_logs:

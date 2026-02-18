@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<include>
+  <context name="default">
+
+    <!--
+      Phase 1 – SIP flow validation
+      Accepts all inbound calls from Kamailio, answers, plays a tone, hangs up.
+      Replace with the AMD flow in Phase 3.
+    -->
+    <extension name="amd_flow">
+      <condition field="destination_number" expression="^(.+)$">
+
+        <!-- Answer the call -->
+        <action application="answer"/>
+
+        <action application="log" data="INFO Call answered: ${destination_number} from ${caller_id_number} [${uuid}]"/>
+
+        <!--
+          ── Phase 1: echo / tone (validates end-to-end SIP + media) ──
+          Comment out and enable Phase 3 block below once AMD service is ready.
+        -->
+        <action application="playback" data="tone_stream://%(1000,500,440);loops=3"/>
+
+        <!--
+          ── Phase 3: AMD via mod_curl ──
+          Uncomment once AMD service is validated.
+
+          Record first 4s of audio for analysis:
+          <action application="record"    data="/tmp/${uuid}_amd.wav 4 200"/>
+          <action application="sleep"     data="4000"/>
+
+          POST recording to AMD service:
+          <action application="curl_sendfile"
+                  data="${amd_service_url}/analyze ${uuid} /tmp/${uuid}_amd.wav"/>
+
+          <action application="set" data="amd_result=${curl_response_data}"/>
+          <action application="log" data="INFO AMD result for ${uuid}: ${amd_result}"/>
+
+          Apply decision:
+          <action application="execute_on_answer"
+                  data="transfer ${destination_number} XML default"/>
+        -->
+
+        <action application="hangup"/>
+      </condition>
+    </extension>
+
+  </context>
+</include>

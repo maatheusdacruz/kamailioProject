@@ -1,0 +1,54 @@
+<configuration name="sofia.conf" description="Sofia SIP">
+  <global_settings>
+    <param name="log-level" value="0"/>
+    <param name="auto-restart" value="false"/>
+    <param name="debug-presence" value="0"/>
+  </global_settings>
+
+  <profiles>
+    <!--
+      Profile "kamailio": accepts SIP from Kamailio on port 5080.
+      No registration required – Kamailio controls authentication.
+      auth-calls=false because Kamailio already authenticated callers.
+    -->
+    <profile name="kamailio">
+      <gateways/>
+
+      <domains>
+        <domain name="all" alias="false" parse="false"/>
+      </domains>
+
+      <settings>
+        <param name="sip-ip"   value="$${local_ip_v4}"/>
+        <param name="sip-port" value="5080"/>
+        <param name="rtp-ip"   value="$${local_ip_v4}"/>
+
+        <param name="ext-sip-ip" value="auto-nat"/>
+        <param name="ext-rtp-ip" value="auto-nat"/>
+
+        <param name="context"         value="default"/>
+        <param name="inbound-codec-prefs"  value="$${global_codec_prefs}"/>
+        <param name="outbound-codec-prefs" value="$${outbound_codec_prefs}"/>
+
+        <param name="rtp-start-port" value="$${rtp_start_port}"/>
+        <param name="rtp-end-port"   value="$${rtp_end_port}"/>
+
+        <!-- No auth – Kamailio handles it -->
+        <param name="auth-calls"       value="false"/>
+        <param name="accept-blind-reg" value="false"/>
+        <param name="accept-blind-auth" value="false"/>
+
+        <!-- Only accept SIP from Kamailio (loopback + RFC-1918) -->
+        <param name="apply-inbound-acl" value="kamailio_acl"/>
+        <param name="local-network-acl" value="rfc1918.auto"/>
+
+        <param name="inbound-late-negotiation" value="true"/>
+        <param name="nonce-ttl"                value="60"/>
+        <param name="log-auth-failures"        value="false"/>
+
+        <param name="record-path"     value="/var/lib/freeswitch/recordings"/>
+        <param name="record-template" value="${caller_id_number}.${strftime(%Y-%m-%d-%H-%M-%S)}.wav"/>
+      </settings>
+    </profile>
+  </profiles>
+</configuration>

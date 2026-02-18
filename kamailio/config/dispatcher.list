@@ -1,0 +1,10 @@
+# Kamailio dispatcher – FreeSWITCH node list
+# Format: setid destination flags priority attrs
+#
+# setid  1 = FreeSWITCH media servers
+# algo   4 = round-robin (ds_select_dst)
+#
+# For HA: add a second FreeSWITCH node below
+#   1 sip:10.0.0.2:5080 0 0 weight=50
+
+1 sip:127.0.0.1:5080 0 0 weight=100

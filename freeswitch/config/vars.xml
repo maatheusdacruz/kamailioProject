@@ -1,0 +1,18 @@
+<include>
+  <!-- Local IP – FreeSWITCH auto-detects; override if needed -->
+  <X-PRE-PROCESS cmd="exec-set" data="local_ip_v4=ip addr show | awk '/inet /{print $2}' | cut -d/ -f1 | head -1"/>
+
+  <X-PRE-PROCESS cmd="set" data="domain=$${local_ip_v4}"/>
+  <X-PRE-PROCESS cmd="set" data="domain_name=$${domain}"/>
+
+  <!-- AMD microservice endpoint (env AMD_SERVICE_URL takes precedence) -->
+  <X-PRE-PROCESS cmd="set" data="amd_service_url=http://127.0.0.1:8080"/>
+
+  <!-- Codec preference -->
+  <X-PRE-PROCESS cmd="set" data="global_codec_prefs=PCMU,PCMA"/>
+  <X-PRE-PROCESS cmd="set" data="outbound_codec_prefs=PCMU,PCMA"/>
+
+  <!-- RTP port range -->
+  <X-PRE-PROCESS cmd="set" data="rtp_start_port=16384"/>
+  <X-PRE-PROCESS cmd="set" data="rtp_end_port=32768"/>
+</include>
