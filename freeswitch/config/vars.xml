@@ -5,8 +5,8 @@
   <X-PRE-PROCESS cmd="set" data="domain=$${local_ip_v4}"/>
   <X-PRE-PROCESS cmd="set" data="domain_name=$${domain}"/>
 
-  <!-- AMD microservice endpoint (env AMD_SERVICE_URL takes precedence) -->
-  <X-PRE-PROCESS cmd="set" data="amd_service_url=http://127.0.0.1:8080"/>
+  <!-- AMD microservice endpoint – reads AMD_SERVICE_URL env var, falls back to loopback -->
+  <X-PRE-PROCESS cmd="exec-set" data="amd_service_url=echo ${AMD_SERVICE_URL:-http://127.0.0.1:8080}"/>
 
   <!-- Codec preference -->
   <X-PRE-PROCESS cmd="set" data="global_codec_prefs=PCMU,PCMA"/>
