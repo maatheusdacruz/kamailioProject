@@ -176,7 +176,30 @@ Preparado para:
 
 ---
 
-## 3.6 Redis
+## 3.6 Siremis (Interface Web de Gerenciamento)
+
+Responsável por:
+
+- Interface web para administração do Kamailio
+- Gerenciamento de subscribers, dispatcher, dialplan
+- Monitoramento de diálogos ativos em tempo real
+- Visualização de estatísticas e contabilização
+- Controle runtime do Kamailio via JSONRPC
+
+Stack:
+
+- PHP 8.2 + Apache
+- Conecta ao PostgreSQL (tabelas do Kamailio)
+- Conecta ao Kamailio via HTTP JSONRPC (porta 5064)
+
+Acesso:
+
+- URL: http://host:8088/siremis/
+- Configuração inicial via wizard web
+
+---
+
+## 3.7 Redis
 
 Responsável por:
 
@@ -275,6 +298,12 @@ Kamailio → Banco:
 
 Kamailio → Redis:
 - Cache e estado
+
+Siremis → PostgreSQL:
+- Gerenciamento de configuração
+
+Siremis → Kamailio:
+- HTTP JSONRPC (porta 5064)
 
 ---
 

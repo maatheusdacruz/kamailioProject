@@ -11,4 +11,12 @@
     <X-PRE-PROCESS cmd="include" data="dialplan/*.xml"/>
   </section>
 
+  <section name="directory" description="User Directory">
+    <!-- No local SIP users – Kamailio handles authentication -->
+  </section>
+
+  <section name="languages" description="Languages">
+    <!-- Language prompts loaded from package defaults if present -->
+  </section>
+
 </document>

@@ -1,10 +1,9 @@
-version: '3.8'
-
 # Network architecture:
 #   HAProxy  (host network) → port 5060 external SIP entry
-#   Kamailio (host network) → port 5061, behind HAProxy
+#   Kamailio (host network) → port 5061 SIP, port 5064 JSONRPC (Siremis)
 #   FreeSWITCH (host network) → port 5080, receives from Kamailio
 #   AMD service  (bridge)  → exposed on 127.0.0.1:8080
+#   Siremis      (bridge)  → exposed on 127.0.0.1:8088
 #   PostgreSQL   (bridge)  → exposed on 127.0.0.1:5432
 #   Redis        (bridge)  → exposed on 127.0.0.1:6379
 #
@@ -30,9 +29,13 @@ services:
     volumes:
       - ./kamailio/config:/etc/kamailio:ro
     environment:
-      - DB_URL=postgres://${DB_USER:-kamailio}:${DB_PASS:-kamailio}@127.0.0.1:5432/${DB_NAME:-kamailio}
-      - REDIS_HOST=127.0.0.1
+      - DB_USER=${DB_USER:-kamailio}
+      - DB_PASS=${DB_PASS:-kamailio}
+      - DB_NAME=${DB_NAME:-kamailio}
+      - DB_URL=postgres://${DB_USER:-kamailio}:${DB_PASS:-kamailio}@postgres:5432/${DB_NAME:-kamailio}
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,9 +47,10 @@ services:
   freeswitch:
     build:
       context: ./freeswitch
+      args:
+        SIGNALWIRE_TOKEN: ${SIGNALWIRE_TOKEN}
     network_mode: host
     volumes:
-      - ./freeswitch/config:/etc/freeswitch:ro
       - freeswitch_recordings:/var/lib/freeswitch/recordings
       - freeswitch_logs:/var/log/freeswitch
     environment:
@@ -71,6 +75,21 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    restart: unless-stopped
+
+  # ── Web Management (Siremis) ───────────────────────────────────────────────
+  siremis:
+    build:
+      context: ./siremis
+    ports:
+      - "127.0.0.1:8088:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kamailio:
+        condition: service_started
     restart: unless-stopped
 
   # ── Data Layer ─────────────────────────────────────────────────────────────

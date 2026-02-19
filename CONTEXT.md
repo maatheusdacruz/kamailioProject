@@ -154,9 +154,20 @@ Este arquivo é a fonte oficial de verdade do projeto.
 
 ---
 
-# 10. Fora do Escopo (Inicialmente)
+# 10. Interface de Gerenciamento (Siremis)
 
-- Interface gráfica administrativa
+Adicionado Siremis como interface web administrativa do Kamailio:
+
+- Containerizado via Docker (PHP 8.2 + Apache)
+- Conecta ao PostgreSQL para gerenciamento de configuração
+- Conecta ao Kamailio via HTTP JSONRPC (porta 5064)
+- Acessível em http://host:8088/siremis/
+- Configuração inicial via wizard web
+
+---
+
+# 11. Fora do Escopo (Inicialmente)
+
 - IA baseada em redes neurais profundas
 - Transcrição completa de áudio
 - Billing
