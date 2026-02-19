@@ -3,12 +3,11 @@ FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Kamailio 5.7 from official packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN set -e; \
+    apt-get update && apt-get install -y --no-install-recommends \
         gnupg2 wget ca-certificates \
-    && wget -qO /usr/share/keyrings/kamailio.gpg \
-        https://deb.kamailio.org/kamailiodebkey.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/kamailio.gpg] \
-        http://deb.kamailio.org/kamailio57 bookworm main" \
+    && wget -qO - https://deb.kamailio.org/kamailiodebkey.gpg | apt-key add - \
+    && echo "deb http://deb.kamailio.org/kamailio57 bookworm main" \
         > /etc/apt/sources.list.d/kamailio.list \
     && apt-get update && apt-get install -y --no-install-recommends \
         kamailio \

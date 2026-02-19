@@ -39,15 +39,16 @@ The environment runs via Docker with `network_mode: host` for SIP/media componen
 
 ```bash
 cp .env.example .env          # configure before first run
-docker compose up -d          # start all services
-docker compose logs -f        # follow all logs
-docker compose logs -f kamailio freeswitch amd_service
-docker compose down           # stop and remove containers
+# set SIGNALWIRE_TOKEN in .env before starting
+docker-compose up -d          # start all services
+docker-compose logs -f        # follow all logs
+docker-compose logs -f kamailio freeswitch amd_service
+docker-compose down           # stop and remove containers
 ```
 
-FreeSWITCH requires a free **SignalWire Personal Access Token** passed as a build arg:
+FreeSWITCH requires a free **SignalWire Personal Access Token** set in `.env`:
 ```bash
-docker compose build --build-arg SIGNALWIRE_TOKEN=<your-token> freeswitch
+docker-compose build freeswitch
 ```
 
 ---
