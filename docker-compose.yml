@@ -88,11 +88,33 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
       kamailio:
         condition: service_started
     restart: unless-stopped
 
   # ── Data Layer ─────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "127.0.0.1:3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASS:-siremis123}
+      - MYSQL_DATABASE=siremis
+      - MYSQL_USER=siremis
+      - MYSQL_PASSWORD=${MYSQL_PASS:-siremis}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASS:-siremis123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     ports:
@@ -128,6 +150,7 @@ services:
 
 volumes:
   postgres_data:
+  mysql_data:
   redis_data:
   freeswitch_recordings:
   freeswitch_logs:
