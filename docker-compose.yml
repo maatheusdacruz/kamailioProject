@@ -98,7 +98,7 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "127.0.0.1:3306:3306"
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASS:-siremis123}
       - MYSQL_DATABASE=siremis
@@ -106,6 +106,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASS:-siremis}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./siremis/siremis-modules.sql:/docker-entrypoint-initdb.d/02-siremis-modules.sql:ro
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASS:-siremis123}"]

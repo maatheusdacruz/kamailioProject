@@ -43,4 +43,6 @@ COPY config/ /etc/freeswitch/
 # SIP port (Kamailio → FreeSWITCH) and ESL control port
 EXPOSE 5080/udp 5080/tcp 8021/tcp
 
-CMD ["freeswitch", "-nf", "-nonat", "-c"]
+# Start FreeSWITCH with foreground mode to keep container running
+ENTRYPOINT ["/usr/bin/freeswitch"]
+CMD ["-nf", "-nonat", "-c"]
