@@ -63,6 +63,12 @@ COPY overrides/profileService.php /var/www/html/siremis/modules/service/profileS
 # Fix .htaccess RewriteBase: was /siremis/ but app is served from /
 COPY overrides/htaccess /var/www/html/siremis/.htaccess
 
+# Fix SQL quoting: getDBTableQuoted() always used MySQL backticks even for PostgreSQL.
+# BizDataSql now accepts and stores the dbName, passing it to all getDBTableQuoted calls.
+# BizDataObj_SQLHelper now passes $dataObj->m_Database to every getDBTableQuoted call.
+COPY overrides/BizDataSql.php /var/www/html/openbiz/bin/data/BizDataSql.php
+COPY overrides/BizDataObj_SQLHelper.php /var/www/html/openbiz/bin/data/private/BizDataObj_SQLHelper.php
+
 # Ensure APP_URL stays root-based at container start
 COPY entrypoint.sh /usr/local/bin/siremis-entrypoint
 RUN chmod +x /usr/local/bin/siremis-entrypoint
